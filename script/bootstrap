@@ -1,0 +1,6 @@
+#!/usr/bin/bash
+
+TFLINT_INSTALL_PATH=./.tflint
+
+# Set up Terraform tooling
+curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | TFLINT_INSTALL_PATH=$TFLINT_INSTALL_PATH bash

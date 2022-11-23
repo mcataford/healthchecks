@@ -1,0 +1,11 @@
+#!/usr/bin/bash
+
+# Starts a local instance of the lambda.
+
+(
+    source $(dirname $0)/../.config
+
+    cd $PROJECT_ROOT
+
+    docker-compose up -d --build
+)

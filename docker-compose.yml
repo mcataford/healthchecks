@@ -1,0 +1,13 @@
+version: '3.2'
+services:
+    web:
+        build: .
+        volumes:
+            - ./src/:/var/task/
+        command: "base.handler"
+        ports:
+            - "9001:9001"
+        environment:
+            PYTHONPATH: /var/task/src:/var/task/lib
+            DOCKER_LAMBDA_STAY_OPEN: 1
+            DOCKER_LAMBDA_WATCH: 1

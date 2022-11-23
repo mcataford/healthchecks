@@ -1,0 +1,52 @@
+#!/usr/bin/bash -e
+
+# Deploys the whole project (bootstrap + application resources). This
+# also takes care of pushing the lambda function's packed source code
+# to S3, provided ARCHIVE is provided.
+#
+# Example usage:
+#   ARCHIVE=./lambda_function.zip . script/deploy
+
+source $(dirname $0)/../.config
+
+BOOTSTRAP_INFRA_ROOT=$(realpath $BOOTSTRAP_ROOT/infrastructure/bootstrap)
+APPLICATION_INFRA_ROOT=$(realpath $BOOTSTRAP_ROOT/infrastructure/app)
+DEFAULT_ENVNAME="dev-$USER"
+
+# Bootstrap resources deployment
+
+(
+    cd $BOOTSTRAP_INFRA_ROOT
+    terraform init
+    terraform apply --var-file $VARIABLES_PATH
+
+    BUCKET_NAME=$(terraform output --json | jq .artifacts_bucket_name.value -r)
+    cd -
+    aws s3 cp $ARCHIVE s3://$BUCKET_NAME
+) || exit $?
+
+# Application resources deployment
+
+(
+    cd $APPLICATION_INFRA_ROOT
+    terraform init
+
+    # Some resources are always marked as tainted
+    # to force their recreation.
+
+    declare -a ALWAYS_TAINT_RESOURCES=(
+        "aws_lambda_function.apgnd_lambda_func"
+        "aws_lambda_permission.apigw"
+    )
+ 
+    for RESOURCE in $ALWAYS_TAINT_RESOURCES 
+    do
+        terraform taint --allow-missing $RESOURCE
+    done
+
+    terraform apply \
+        --var-file $VARIABLES_PATH \
+        -var="env_name=${ENV_NAME:-$DEFAULT_ENVNAME}" \
+        -var="commit_sha=$(git log --pretty=format:'%H' -n 1)" \
+        -var="lambda_archive_name=$(basename $ARCHIVE)"
+) || exit $? 

@@ -1,0 +1,31 @@
+#!/usr/bin/bash
+
+# Applies infrastructure changes for the given project.
+#
+# The project name is expected to be passed as an environment variable,
+# i.e. PROJECT=app . script/apply
+
+(
+    source $(dirname $0)/../.config
+
+    PROJECT_ROOT=$(realpath $BOOTSTRAP_ROOT/infrastructure/$PROJECT)
+    DEFAULT_ENVNAME="dev-$USER"
+    cd $PROJECT_ROOT
+
+    terraform init
+
+    # Some resources are always marked as tainted
+    # to force their recreation.
+
+    declare -a ALWAYS_TAINT_RESOURCES=(
+        "aws_lambda_function.apgnd_lambda_func"
+        "aws_lambda_permission.apigw"
+    )
+
+    for RESOURCE in $ALWAYS_TAINT_RESOURCES 
+    do
+        terraform taint --allow-missing $RESOURCE
+    done
+
+    terraform apply --var-file $VARIABLES_PATH -var="env_name=${ENV_NAME:-$DEFAULT_ENVNAME}" -var="commit_sha=$(git log --pretty=format:'%H' -n 1)"
+)

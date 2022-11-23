@@ -1,0 +1,20 @@
+#!/usr/bin/bash
+
+# Pushes the lambda archive to S3.
+#
+# This is a pre-condition to script/apply since creating
+# the Lambda function will expect the source code to be
+# available in the artifacts bucket.
+#
+# The project name is expected to be passed as an environment variable,
+# i.e. ARCHIVE=<path-to-archive> . script/push
+
+(
+    source $(dirname $0)/../.config
+
+    BOOTSTRAP_PROJECT=$(realpath $BOOTSTRAP_ROOT/infrastructure/bootstrap)
+    cd $BOOTSTRAP_PROJECT
+    BUCKET_NAME=$(terraform output --json | jq .artifacts_bucket_name.value -r)
+    cd -
+    aws s3 cp $ARCHIVE s3://$BUCKET_NAME
+)

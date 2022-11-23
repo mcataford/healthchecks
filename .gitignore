@@ -1,0 +1,11 @@
+bin
+*.venv
+*.sw*
+*.pyc
+*.zip
+*_out.json
+*.terraform*
+*tfstate*
+*tfvars
+.tflint
+.coverage

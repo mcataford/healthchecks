@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Lints and formats terraform files.
+
+(
+    TFLINT_PATH=$(realpath ./.tflint/tflint)
+
+    for PROJECT in "bootstrap" "app"
+    do
+        (
+            PROJECT_ROOT=./infrastructure/$PROJECT
+            echo ">>> Linting $PROJECT_ROOT"
+            cd $PROJECT_ROOT
+            terraform init
+            $TFLINT_PATH # --var-file ../variables.tfvars
+            terraform fmt -write=true
+        )
+    done
+) 
