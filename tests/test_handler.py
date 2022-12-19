@@ -16,7 +16,7 @@ def fixture_call_handler():
         # pylint: disable=import-outside-toplevel
         from src.base import handler as lambda_handler
 
-        client = boto3.client("dynamodb")
+        client = boto3.client("dynamodb", region_name="us-east-1")
         client.create_table(
             AttributeDefinitions=[
                 {"AttributeName": "event_id", "AttributeType": "S"},
@@ -109,7 +109,7 @@ def test_creates_dynamodb_record_on_valid_post_request(
     get_mock_event, get_mock_context, call_handler
 ):
     """The handler writes to DynamoDB on successful requests."""
-    table = boto3.resource("dynamodb").Table("healthchecks")
+    table = boto3.resource("dynamodb", region_name="us-east-1").Table("healthchecks")
 
     event = get_mock_event(
         body=json.dumps({"service_name": "test", "checks": []}), method="POST"

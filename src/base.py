@@ -17,7 +17,7 @@ import boto3
 
 logger = logging.getLogger(__name__)
 
-ddb_table = boto3.resource("dynamodb").Table("healthchecks")
+ddb_table = boto3.resource("dynamodb", region_name="us-east-1").Table("healthchecks")
 
 
 class Response(typing.TypedDict):
