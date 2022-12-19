@@ -9,3 +9,4 @@ bin
 *tfvars
 .tflint
 .coverage
+*egg-info

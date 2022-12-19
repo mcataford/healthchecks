@@ -88,11 +88,11 @@ resource "aws_dynamodb_table" "ddb" {
   billing_mode   = "PROVISIONED"
   read_capacity  = 5
   write_capacity = 5
-  hash_key       = "check_id"
+  hash_key       = "event_id"
   range_key      = "service_name"
 
   attribute {
-    name = "check_id"
+    name = "event_id"
     type = "S"
   }
 
