@@ -100,6 +100,11 @@ resource "aws_dynamodb_table" "ddb" {
     name = "service_name"
     type = "S"
   }
+
+  ttl {
+    enabled = true
+    attribute_name = "ttl"
+  }
 }
 
 output "base_url" {

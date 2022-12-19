@@ -39,6 +39,7 @@ class HealthcheckRecord(typing.TypedDict):
     event_id: str
     event_timestamp: str
     check_data: typing.List[HealthcheckEntry]
+    ttl: int
 
 
 def handler(event, *args, **kwargs) -> Response:
@@ -59,6 +60,11 @@ def handler(event, *args, **kwargs) -> Response:
             "event_id": event["requestContext"]["requestId"],
             "event_timestamp": str(datetime.datetime.utcnow()),
             "checks": request_body["checks"],
+            "ttl": int(
+                (
+                    datetime.datetime.utcnow() + datetime.timedelta(seconds=30)
+                ).timestamp()
+            ),
         }
 
         ddb_table.put_item(Item=healthcheck)
