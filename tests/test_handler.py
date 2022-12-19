@@ -95,7 +95,9 @@ def test_201s_on_valid_post_request_body(
     get_mock_event, get_mock_context, call_handler
 ):
     """The handler 201s on success."""
-    event = get_mock_event(body=json.dumps({"service_name": "test"}), method="POST")
+    event = get_mock_event(
+        body=json.dumps({"service_name": "test", "checks": []}), method="POST"
+    )
     context = get_mock_context()
 
     response = call_handler(event, context)
@@ -109,7 +111,9 @@ def test_creates_dynamodb_record_on_valid_post_request(
     """The handler writes to DynamoDB on successful requests."""
     table = boto3.resource("dynamodb").Table("healthchecks")
 
-    event = get_mock_event(body=json.dumps({"service_name": "test"}), method="POST")
+    event = get_mock_event(
+        body=json.dumps({"service_name": "test", "checks": []}), method="POST"
+    )
     context = get_mock_context()
 
     query = table.scan(FilterExpression=ddb_conditions.Attr("service_name").eq("test"))
@@ -142,10 +146,10 @@ def test_returns_entries_by_services_on_get(
 
     # Create the checks/
     post_event_1 = get_mock_event(
-        body=json.dumps({"service_name": "test-one"}), method="POST"
+        body=json.dumps({"service_name": "test-one", "checks": []}), method="POST"
     )
     post_event_2 = get_mock_event(
-        body=json.dumps({"service_name": "test-two"}), method="POST"
+        body=json.dumps({"service_name": "test-two", "checks": []}), method="POST"
     )
     post_context = get_mock_context()
 
