@@ -21,7 +21,7 @@ jobs:
         . script/bootstrap
         black . --check
         pylint ./src/*.py ./tests/*.py
-  lint:
+  test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
