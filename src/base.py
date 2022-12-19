@@ -106,9 +106,7 @@ def handler(event, *args, **kwargs) -> Response:
             "event_timestamp": str(datetime.datetime.utcnow()),
             "checks": request_body["checks"],
             "ttl": int(
-                (
-                    datetime.datetime.utcnow() + datetime.timedelta(seconds=30)
-                ).timestamp()
+                (datetime.datetime.utcnow() + datetime.timedelta(hours=24)).timestamp()
             ),
         }
 
