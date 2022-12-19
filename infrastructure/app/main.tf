@@ -83,6 +83,25 @@ resource "aws_lambda_permission" "apigw" {
 
 }
 
+resource "aws_dynamodb_table" "ddb" {
+  name           = "healthchecks"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 5
+  write_capacity = 5
+  hash_key       = "check_id"
+  range_key      = "service_name"
+
+  attribute {
+    name = "check_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "service_name"
+    type = "S"
+  }
+}
+
 output "base_url" {
   value = aws_api_gateway_deployment.lambda.invoke_url
 }
