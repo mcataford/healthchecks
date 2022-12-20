@@ -9,6 +9,12 @@ import boto3.dynamodb.conditions as ddb_conditions
 import tests.mock_data as mock_data
 
 
+@pytest.fixture(autouse=True)
+def fixture_env_presets(monkeypatch):
+    monkeypatch.setenv("AWS_REGION_NAME", "us-east-1")
+    monkeypatch.setenv("API_KEY", "key-key-key")
+
+
 @pytest.fixture(name="call_handler")
 def fixture_call_handler():
     """Lambda handler with mocked DDB"""
@@ -40,12 +46,20 @@ def fixture_call_handler():
 
 @pytest.fixture(name="get_mock_event")
 def fixture_get_mock_event():
-    def _get_mock_event(*, body: typing.Any, method: str):
+    def _get_mock_event(
+        *, body: typing.Any, method: str, authorization: typing.Optional[str] = None
+    ):
+
+        extra_headers = {}
+
+        if authorization:
+            extra_headers["Authorization"] = authorization
 
         return {
             **mock_data.SAMPLE_EVENT,
             "body": body,
             "httpMethod": method,
+            "headers": {**mock_data.SAMPLE_EVENT["headers"], **extra_headers},
             "requestContext": {
                 **mock_data.SAMPLE_EVENT["requestContext"],
                 "httpMethod": method,
@@ -66,10 +80,40 @@ def fixture_get_mock_context():
 # POST: healthcheck reception
 
 
+def test_401s_if_authorization_header_incorrect(
+    get_mock_event, get_mock_context, call_handler
+):
+    """POST requests need to include the right API key authorization"""
+
+    event = get_mock_event(
+        body="totally-not-json", method="POST", authorization="wrong-key"
+    )
+    context = get_mock_context()
+
+    response = call_handler(event, context)
+
+    assert response["statusCode"] == 401
+
+
+def test_401s_if_authorization_header_absent(
+    get_mock_event, get_mock_context, call_handler
+):
+    """POST requests need to include the right API key authorization"""
+
+    event = get_mock_event(body="totally-not-json", method="POST", authorization=None)
+    context = get_mock_context()
+
+    response = call_handler(event, context)
+
+    assert response["statusCode"] == 401
+
+
 def test_400s_on_non_json_request_body(get_mock_event, get_mock_context, call_handler):
     """The handler only accepts JSON payloads."""
 
-    event = get_mock_event(body="totally-not-json", method="POST")
+    event = get_mock_event(
+        body="totally-not-json", method="POST", authorization="key-key-key"
+    )
     context = get_mock_context()
 
     response = call_handler(event, context)
@@ -96,7 +140,9 @@ def test_201s_on_valid_post_request_body(
 ):
     """The handler 201s on success."""
     event = get_mock_event(
-        body=json.dumps({"service_name": "test", "checks": []}), method="POST"
+        body=json.dumps({"service_name": "test", "checks": []}),
+        method="POST",
+        authorization="key-key-key",
     )
     context = get_mock_context()
 
@@ -112,7 +158,9 @@ def test_creates_dynamodb_record_on_valid_post_request(
     table = boto3.resource("dynamodb", region_name="us-east-1").Table("healthchecks")
 
     event = get_mock_event(
-        body=json.dumps({"service_name": "test", "checks": []}), method="POST"
+        body=json.dumps({"service_name": "test", "checks": []}),
+        method="POST",
+        authorization="key-key-key",
     )
     context = get_mock_context()
 
@@ -146,10 +194,14 @@ def test_returns_entries_by_services_on_get(
 
     # Create the checks/
     post_event_1 = get_mock_event(
-        body=json.dumps({"service_name": "test-one", "checks": []}), method="POST"
+        body=json.dumps({"service_name": "test-one", "checks": []}),
+        method="POST",
+        authorization="key-key-key",
     )
     post_event_2 = get_mock_event(
-        body=json.dumps({"service_name": "test-two", "checks": []}), method="POST"
+        body=json.dumps({"service_name": "test-two", "checks": []}),
+        method="POST",
+        authorization="key-key-key",
     )
     post_context = get_mock_context()
 

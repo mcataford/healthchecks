@@ -12,18 +12,23 @@ import logging
 import json
 import typing
 import datetime
+import os
 
 import boto3
 
 logger = logging.getLogger(__name__)
 
-ddb_table = boto3.resource("dynamodb", region_name="us-east-1").Table("healthchecks")
+AWS_REGION = os.getenv("AWS_REGION_NAME")
+API_KEY = os.getenv("API_KEY")
+
+ddb_table = boto3.resource("dynamodb", region_name=AWS_REGION).Table("healthchecks")
 
 
 class Response(typing.TypedDict):
     """Partial representation of the response format returned by the handler"""
 
     status_code: int
+    body: typing.Optional[str]
 
 
 class HealthcheckEntry(typing.TypedDict):
@@ -35,7 +40,7 @@ class HealthcheckEntry(typing.TypedDict):
 
     name: str
     success: bool
-    metric: float
+    metric: typing.Union[float, int, str]
 
 
 class HealthcheckRecord(typing.TypedDict):
@@ -78,6 +83,9 @@ def handler(event, *args, **kwargs) -> Response:
     201 CREATED {}
     ```
 
+    A POST that does not include the right API key in its Authorization header
+    will fail with a 401.
+
     Any invalid payload (i.e. non-json request body for POST requests or HTTP verbs
     other than GET/POST) will result in a 400.
     """
@@ -91,6 +99,11 @@ def handler(event, *args, **kwargs) -> Response:
     # writes a new entry with TTL (24h) to DynamoDB.
 
     if http_method == "POST":
+        api_key_provided = event["headers"].get("Authorization")
+
+        if api_key_provided is None or API_KEY != api_key_provided:
+            return {"statusCode": 401}
+
         try:
             request_body = json.loads(event["body"])
         except:
