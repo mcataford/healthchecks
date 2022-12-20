@@ -17,3 +17,8 @@ variable "artifacts_bucket_name" {
 variable "lambda_archive_name" {
   type = string
 }
+
+variable "api_key_dangerous" {
+  description = "Temporary location of the API key that needs to be used to something else"
+  type        = string
+}

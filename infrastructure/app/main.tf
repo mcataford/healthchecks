@@ -1,20 +1,54 @@
 resource "aws_iam_role" "lambda_role" {
-  name               = "${local.service_longname}_lambda-role"
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+  name = "${local.service_longname}_lambda-role"
+  assume_role_policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Action" : "sts:AssumeRole",
+        "Principal" : {
+          "Service" : "lambda.amazonaws.com"
+        },
+        "Effect" : "Allow",
+        "Sid" : ""
+      }
+    ]
+  })
+
+  inline_policy {
+    name = "logging-access"
+    policy = jsonencode({
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Action" : [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ],
+          "Resource" : "*",
+          "Effect" : "Allow"
+        },
+      ]
+    })
+  }
+
+  inline_policy {
+    name = "dynamo-access"
+    policy = jsonencode({
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Action" : [
+            "dynamodb:GetRecords",
+            "dynamodb:PutItem",
+            "dynamodb:Scan"
+          ],
+          "Resource" : "*",
+          "Effect" : "Allow"
+        },
+      ]
+    })
+  }
 
   tags = local.common_tags
 
@@ -28,6 +62,13 @@ resource "aws_lambda_function" "lambda_func" {
 
   s3_bucket = var.artifacts_bucket_name
   s3_key    = var.lambda_archive_name
+
+  environment {
+    variables = {
+      API_KEY         = var.api_key_dangerous
+      AWS_REGION_NAME = var.aws_region
+    }
+  }
 
   tags = local.common_tags
 }
@@ -102,7 +143,7 @@ resource "aws_dynamodb_table" "ddb" {
   }
 
   ttl {
-    enabled = true
+    enabled        = true
     attribute_name = "ttl"
   }
 }
