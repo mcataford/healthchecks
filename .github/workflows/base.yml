@@ -1,4 +1,4 @@
-name: Lambda Boilerplate
+name: Healthchecks CI
 
 on: [push]
 jobs:
@@ -10,3 +10,24 @@ jobs:
     - run: |
         . script/bootstrap
         . script/terraform-lint
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    - run: |
+        . script/bootstrap
+        black . --check
+        pylint ./src/*.py ./tests/*.py
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    - run: |
+        . script/bootstrap
+        pytest --cov=src

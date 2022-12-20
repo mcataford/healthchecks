@@ -2,5 +2,17 @@
 
 TFLINT_INSTALL_PATH=./.tflint
 
+VENV="healthchecks.venv"
+
+python -m pip install pip==22.3 pip-tools==6.9.0 --no-cache
+
+if [ ! -d "./$VENV" ]; then
+    python -m venv ./$VENV
+fi
+
+source ./$VENV/bin/activate
+
+pip install -e '.[dev]'
+
 # Set up Terraform tooling
 curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | TFLINT_INSTALL_PATH=$TFLINT_INSTALL_PATH bash

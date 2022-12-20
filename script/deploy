@@ -1,4 +1,4 @@
-#!/usr/bin/bash -e
+#!/usr/bin/bash
 
 # Deploys the whole project (bootstrap + application resources). This
 # also takes care of pushing the lambda function's packed source code
@@ -35,7 +35,7 @@ DEFAULT_ENVNAME="dev-$USER"
     # to force their recreation.
 
     declare -a ALWAYS_TAINT_RESOURCES=(
-        "aws_lambda_function.apgnd_lambda_func"
+        "aws_lambda_function.lambda_func"
         "aws_lambda_permission.apigw"
     )
  

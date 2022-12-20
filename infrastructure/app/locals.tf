@@ -1,5 +1,5 @@
 locals {
-  service_name = "lambda-boilerplate"
+  service_name = "healthchecks"
 }
 
 locals {
