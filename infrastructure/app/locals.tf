@@ -1,5 +1,5 @@
 locals {
-  service_name = "spadinaistan-healthchecks"
+  service_name = "healthchecks"
 }
 
 locals {
